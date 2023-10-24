@@ -1,0 +1,26 @@
+{
+    "args": [
+        "-std=gnu++11",
+        "-I/Library/Frameworks/R.framework/Resources/include",
+        "-DNDEBUG",
+        "-I/opt/arrayfire/include",
+        "-I/Users/sfurlan/develop/viewmastR2/inst/include",
+        "-I/opt/R/x86_64/include",
+        "-fPIC",
+        "-falign-functions=64",
+        "-I/Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/library/Rcpp/include",
+        "-I/Library/Frameworks/R.framework/Versions/4.3-x86_64/Resources/library/RcppArrayFire/include",
+        "-DEIGEN_DONT_VECTORIZE",
+        "-I/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include",
+        "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/c++/v1",
+        "-I/Library/Developer/CommandLineTools/usr/lib/clang/15.0.0/include",
+        "-I/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include",
+        "-I/Library/Developer/CommandLineTools/usr/include"
+    ],
+    "pch": "Rcpp",
+    "is_cpp": true,
+    "hash": "165282286716981003041698103925",
+    "compiler": "2441644137927445834",
+    "rversion": "4.3.1",
+    "dbversion": 4
+}
