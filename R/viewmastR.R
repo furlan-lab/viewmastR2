@@ -27,9 +27,16 @@ viewmastR <-function(query_cds,
                      iterations = 1000,
                      LSImethod=1,
                      verbose = T,
-                     device = 0,
+                     device = c("GPU", "GPU_OPENCL", "GPU_CUDA", "CPU"),
                      threshold = NULL,
-                     keras_model = NULL, ...){
+                     keras_model = NULL,
+                     use_sparse = F, ...){
+  
+  if(verbose){
+    message("Checking arguments and input")
+  }
+  #deal with device
+  device = match.arg(device)
   
   #capture args for specific fxns
   argg <- c(as.list(environment()), list(...))
@@ -40,7 +47,12 @@ viewmastR <-function(query_cds,
     warning("Both tf_idf and scale selected. Cannot do this as they are both scaling methods. Using tf_idf alone")
     scale<-F
   }
+  FUNC<-match.arg(FUNC)
   norm_method=match.arg(norm_method)
+  if(FUNC %in% c("keras_nn", "xgboost", "lasso")){
+    warning(paste0("Currently no sparse matrix support for FUNC = ", FUNC))
+    use_sparse<-F
+  }
 
   #get class of object
   if(class(query_cds) != class(ref_cds)){stop("input objects must be of the same class")}
@@ -55,41 +67,88 @@ viewmastR <-function(query_cds,
   }
   if(is.null(software)){stop("software not found for input objects")}
   
-  #set fxn
-  FUNC=match.arg(FUNC)
-  switch(FUNC, 
-         naive_bayes={FUNC = naive_bayes
-         funclabel="naive_bayes_"
-         output = "labels"},
-         neural_network={FUNC = af_nn
-         funclabel="nn_"
-         layers=T
-         output = "probs"},
-         softmax_regression={FUNC = smr
-         funclabel="smr_"
-         output = "probs"},
-         deep_belief_nn={FUNC = af_dbn
-         funclabel="dbnn_"
-         output = "probs"},
-         logistic_regression={FUNC = lr
-         funclabel="lr_"
-         output = "probs"},
-         bagging={FUNC = bagging
-         funclabel="bagging_"
-         output = "labels"},
-         perceptron={FUNC = perceptron
-         funclabel="perceptron_"
-         output = "probs"},
-         keras_nn={FUNC = keras_helper
-         funclabel="keras_"
-         output = "probs"},
-         xgboost={FUNC = xgboost_helper
-         funclabel="xgboost_"
-         output = "labels"},
-         lasso={FUNC = lasso_helper
-         funclabel="lasso_"
-         output = "probs"},
-  )
+  #setup downstream fxn
+  if(use_sparse){
+    switch(FUNC, 
+           naive_bayes={FUNC = naive_bayes_sparse
+           funclabel="naive_bayes_"
+           output = "labels"
+           addbias = F},
+           neural_network={FUNC = af_nn_sparse
+           funclabel="nn_"
+           layers=T
+           output = "probs"
+           addbias = F},
+           softmax_regression={FUNC = smr_sparse
+           funclabel="smr_"
+           output = "probs"
+           addbias = T},
+           deep_belief_nn={FUNC = af_dbn_sparse
+           funclabel="dbnn_"
+           output = "probs"
+           addbias = F},
+           logistic_regression={FUNC = lr_sparse
+           funclabel="lr_"
+           output = "probs"
+           addbias = T},
+           bagging={FUNC = bagging_sparse
+           funclabel="bagging_"
+           output = "labels"
+           addbias = F},
+           perceptron={FUNC = perceptron_sparse
+           funclabel="perceptron_"
+           output = "probs"
+           addbias = T},
+           keras_nn={FUNC = keras_helper
+           funclabel="keras_"
+           output = "probs"
+           addbias = F},
+           xgboost={FUNC = xgboost_helper
+           funclabel="xgboost_"
+           output = "labels"
+           addbias = F},
+           lasso={FUNC = lasso_helper
+           funclabel="lasso_"
+           output = "probs"
+           addbias = F},
+    )
+  } else {
+    addbias = F
+    switch(FUNC, 
+           naive_bayes={FUNC = naive_bayes
+           funclabel="naive_bayes_"
+           output = "labels"},
+           neural_network={FUNC = af_nn
+           funclabel="nn_"
+           layers=T
+           output = "probs"},
+           softmax_regression={FUNC = smr
+           funclabel="smr_"
+           output = "probs"},
+           deep_belief_nn={FUNC = af_dbn
+           funclabel="dbnn_"
+           output = "probs"},
+           logistic_regression={FUNC = lr
+           funclabel="lr_"
+           output = "probs"},
+           bagging={FUNC = bagging
+           funclabel="bagging_"
+           output = "labels"},
+           perceptron={FUNC = perceptron
+           funclabel="perceptron_"
+           output = "probs"},
+           keras_nn={FUNC = keras_helper
+           funclabel="keras_"
+           output = "probs"},
+           xgboost={FUNC = xgboost_helper
+           funclabel="xgboost_"
+           output = "labels"},
+           lasso={FUNC = lasso_helper
+           funclabel="lasso_"
+           output = "probs"},
+    )
+  }
+
   
   #deal with null celltype label
   if(is.null(query_celldata_col)){
@@ -99,14 +158,21 @@ viewmastR <-function(query_cds,
   }
   
   #find common features
+  if(verbose){
+    message("Finding common features between reference and query")
+  }
   common_list<-common_features(list(ref_cds, query_cds))
   names(common_list)<-c("ref", "query")
   rm(ref_cds)
   gc()
+
   if(is.null(selected_genes)){
     selected_common<-rownames(common_list[['query']])
     selected_common<-selected_commmon[selected_common %in% rownames(common_list[['ref']])]
   }else{
+    if(verbose){
+      message("Subsetting by pre-selected features")
+    }
     selected_common<-selected_genes
     selected_common<-selected_common[selected_common %in% rownames(common_list[['query']])]
     selected_common<-selected_common[selected_common %in% rownames(common_list[['ref']])]
@@ -115,29 +181,60 @@ viewmastR <-function(query_cds,
   #make final X and query normalizing along the way
   # #no tf_idf
   if(norm_method!="none"){
-    query_mat<-get_norm_counts(common_list[['query']], norm_method = norm_method)[selected_common,]
-    ref_mat<-get_norm_counts(common_list[['ref']], norm_method = norm_method)[rownames(query_mat),]
+    if(verbose){
+      message("Calculated normalized counts")
+    }
+    query<-get_norm_counts(common_list[['query']], norm_method = norm_method)[selected_common,]
+    X<-get_norm_counts(common_list[['ref']], norm_method = norm_method)[rownames(query),]
   }else{
-    query_mat<-get_norm_counts(common_list[['query']], norm_method = )[selected_common,]
-    ref_mat<-get_norm_counts(common_list[['ref']], norm_method = )[rownames(query_mat),]
+    query<-get_norm_counts(common_list[['query']], )[selected_common,]
+    X<-get_norm_counts(common_list[['ref']], )[rownames(query),]
   }
   rm(common_list)
-  gc()
-  X<-as.matrix(ref_mat)
-  query<-as.matrix(query_mat)
-  rm(ref_mat, query_mat)
   gc()
   
   #performe scaling methods
   if(tf_idf){
-    X<-as.matrix(tf_idf_transform(X, LSImethod))
-    query<-as.matrix(tf_idf_transform(query, LSImethod))
+    if(verbose){
+      message("Performing TF-IDF")
+    }
+    X<-tf_idf_transform(X, LSImethod)
+    query<-tf_idf_transform(query, LSImethod)
   }else{
     if(scale){
       X<-scale(X)
+      query <-scale(query)
     }
   }
   
+  #densifying adding bias
+  if(!use_sparse){
+    if(verbose){
+      message("Converting to dense matrix :(")
+    }
+    if(addbias){
+      if(verbose){
+        message("Adding bias")
+      }
+      X <-rbind(rep(1, ncol(Xtrain)), X)
+      query <-rbind(rep(1, ncol(query)), query)
+    }
+    X<-as.matrix(X)
+    query<-as.matrix(query)
+  } else {
+    if(addbias){
+      if(verbose){
+        message("Adding bias")
+      }
+      X <-rbind(rep(1, ncol(X)), X)
+      query <-rbind(rep(1, ncol(query)), query)
+    }
+    X<-as(X, "RsparseMatrix")
+    query<-as(query, "RsparseMatrix")
+  }
+
+  gc()
+
   #prep Y
   Ylab<-as.numeric(labf)-1
   labels<-levels(labf)
@@ -153,12 +250,12 @@ viewmastR <-function(query_cds,
   
   #set specific args to run probs fxn
   if(output=="probs"){
-    args<-list(X[,train_idx], 
-               X[,test_idx], 
+    args<-list(t(X[,train_idx]), 
+               t(X[,test_idx]), 
                Y[train_idx,], 
                Y[test_idx,], 
                length(labels), 
-               query,
+               t(query),
                learning_rate = as.double(learning_rate),
                verbose = verbose,
                device = device)
@@ -292,9 +389,9 @@ xgboost_helper<-function(
   if(is.null(argg$nrounds)){argg$nrounds<-20}
   if(is.null(argg$objective)){argg$objective<-"multi:softprob"}
   if(is.null(argg$cores)){argg$cores<-1}
-  x_test<-t(x_test)
-  x_train<-t(x_train)
-  query<-t(query)
+  # x_test<-t(x_test)
+  # x_train<-t(x_train)
+  # query<-t(query)
   if(verbose){
     message(paste0("Running XGBoost with ", argg$cores, " cores"))
     message(paste0("Train feature dims:\n", paste0(dim(x_train), collapse=" ")))
@@ -332,9 +429,9 @@ lasso_helper<-function(
     device,
     argg){
 
-  x_test<-t(x_test)
-  x_train<-t(x_train)
-  query <-t(query)
+  # x_test<-t(x_test)
+  # x_train<-t(x_train)
+  # query <-t(query)
   if(is.null(argg$cores)){argg$cores<-1}
   if(argg$cores>1){
     parallel <- T
@@ -394,8 +491,8 @@ keras_helper<-function(
   py_config()
   if(!py_available("keras")){stop("keras not found")}
   if(!py_available("tensorflow")){stop("tensorflow not found")}
-  x_train = t(x_train)
-  x_test = t(x_test)
+  # x_train = t(x_train)
+  # x_test = t(x_test)
   message("device = keras")
   message(paste0("Train feature dims:\n", paste0(dim(x_train), collapse=" ")))
   message(paste0("Test feature dims:\n", paste0(dim(x_test), collapse=" ")))
@@ -441,7 +538,7 @@ keras_helper<-function(
   cat('Test loss:', scores[[1]], '\n')
   cat('Test accuracy:', scores[[2]], '\n')
   
-  return(model %>% predict(t(query)))
+  return(model %>% predict(query))
 }
 
 

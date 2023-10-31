@@ -2,17 +2,23 @@
 # Generator token: 10BE3573-1514-4C36-9D1C-5A225CD40393
 
 #' @export
-smr_demo_run <- function(perc, lib_path, device = "GPU", verbose = TRUE, benchmark = FALSE) {
-    .Call('_viewmastR2_smr_demo_run', PACKAGE = 'viewmastR2', perc, lib_path, device, verbose, benchmark)
+set_device <- function(device = "GPU") {
+    .Call('_viewmastR2_set_device', PACKAGE = 'viewmastR2', device)
 }
 
 #' @export
-smr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda = 1.0, learning_rate = 2.0, iterations = 1000L, batch_size = 100L, max_error = 0.5, verbose = FALSE, benchmark = FALSE, device = 0L) {
-    .Call('_viewmastR2_smr', PACKAGE = 'viewmastR2', train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device)
+af_nn <- function(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation = FALSE, device = "GPU", dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE, benchmark = FALSE) {
+    .Call('_viewmastR2_af_nn', PACKAGE = 'viewmastR2', train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark)
 }
 
-computeSparseRowVariances <- function(j, val, rm, n) {
-    .Call('_viewmastR2_computeSparseRowVariances', PACKAGE = 'viewmastR2', j, val, rm, n)
+#' @export
+af_nn_sparse <- function(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation = FALSE, device = "GPU", dts = "f32", learning_rate = 2.0, max_epochs = 250L, batch_size = 100L, max_error = 0.5, verbose = TRUE, benchmark = FALSE) {
+    .Call('_viewmastR2_af_nn_sparse', PACKAGE = 'viewmastR2', train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark)
+}
+
+#' @export
+ann_demo <- function(lib_path, device = 0L, perc = 80L, dts = "f32", verbose = TRUE, benchmark = FALSE) {
+    .Call('_viewmastR2_ann_demo', PACKAGE = 'viewmastR2', lib_path, device, perc, dts, verbose, benchmark)
 }
 
 #' @export
@@ -33,5 +39,24 @@ get_mnist <- function(lib_path, perc = 80L, verbose = TRUE) {
 #' @export
 test_backends <- function() {
     .Call('_viewmastR2_test_backends', PACKAGE = 'viewmastR2')
+}
+
+#' @export
+smr_demo_run <- function(perc, lib_path, device = "GPU", verbose = TRUE, benchmark = FALSE) {
+    invisible(.Call('_viewmastR2_smr_demo_run', PACKAGE = 'viewmastR2', perc, lib_path, device, verbose, benchmark))
+}
+
+#' @export
+smr <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda = 1.0, learning_rate = 2.0, iterations = 1000L, batch_size = 100L, max_error = 0.5, verbose = FALSE, benchmark = FALSE, device = "GPU") {
+    .Call('_viewmastR2_smr', PACKAGE = 'viewmastR2', train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device)
+}
+
+#' @export
+smr_sparse <- function(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda = 1.0, learning_rate = 2.0, iterations = 1000L, batch_size = 100L, max_error = 0.5, verbose = FALSE, benchmark = FALSE, device = "GPU") {
+    .Call('_viewmastR2_smr_sparse', PACKAGE = 'viewmastR2', train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device)
+}
+
+computeSparseRowVariances <- function(j, val, rm, n) {
+    .Call('_viewmastR2_computeSparseRowVariances', PACKAGE = 'viewmastR2', j, val, rm, n)
 }
 
