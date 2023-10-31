@@ -8,6 +8,7 @@
 #include <vector>
 #include "mnist_common.h"
 #include <chrono>
+#include "mlutils.h"
 
 // via the depends attribute we tell Rcpp to create hooks for
 // RcppFire so that the build process will know what to do
@@ -120,60 +121,65 @@ static void benchmark_softmax_regression(const array &train_feats,
   fprintf(stderr, "Prediction time: %4.4lf s\n", timer::stop() / iter);
 }
 
-bool set_device(std::string device = "GPU") {
-  if (device == "GPU") {
-    try {
-      fprintf(stderr, "Trying OpenCL Backend\n");
-      setBackend(AF_BACKEND_OPENCL);
-      std::cerr << "AF_BACKEND_OPENCL: " << AF_BACKEND_OPENCL << std::endl;
-      // testBackend();
-    } catch (exception& e) {
-      fprintf(stderr,"Caught exception when trying OpenCL backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
-  } else if (device == "GPU_CUDA") {
-    try {
-      fprintf(stderr,"Trying CUDA Backend\n");
-      af::setBackend(AF_BACKEND_CUDA);
-      std::cerr << "AF_BACKEND_CUDA: " << AF_BACKEND_CUDA << std::endl;
-      // testBackend();
-    } catch (af::exception& e) {
-      fprintf(stderr,"Caught exception when trying CUDA backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
-  } else if (device == "GPU_OpenCL") {
-    try {
-      fprintf(stderr,"Trying OPENCL Backend\n");
-      setBackend(AF_BACKEND_OPENCL);
-      std::cerr << "AF_BACKEND_OPENCL: " << AF_BACKEND_OPENCL << std::endl;
-      // testBackend();
-    } catch (exception& e) {
-      fprintf(stderr,"Caught exception when trying OpenCL backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
-  } else if (device == "CPU") {
-    try {
-      fprintf(stderr,"Trying CPU Backend\n");
-      setBackend(AF_BACKEND_CPU);
-      std::cerr << "AF_BACKEND_CPU: " << AF_BACKEND_CPU << std::endl;
-      // testBackend();
-    } catch (exception& e) {
-      fprintf(stderr,"Caught exception when trying CPU backend\n");
-      fprintf(stderr, "%s\n", e.what());
-    }
-  } else {
-    std::cerr << "DEVICE:" << device << " not found!!" << std::endl;
-    return true;
-  }
-  return false;
-}
+// 
+// //' @export
+//  // [[Rcpp::export]]
+//  bool set_device(std::string device = "GPU") {
+//    if (device == "GPU") {
+//      try {
+//        fprintf(stderr, "Trying OpenCL Backend\n");
+//        setBackend(AF_BACKEND_OPENCL);
+//        std::cerr << "AF_BACKEND_OPENCL: " << AF_BACKEND_OPENCL << std::endl;
+//        // testBackend();
+//      } catch (exception& e) {
+//        fprintf(stderr,"Caught exception when trying OpenCL backend\n");
+//        fprintf(stderr, "%s\n", e.what());
+//      }
+//    } else if (device == "GPU_CUDA") {
+//      try {
+//        fprintf(stderr,"Trying CUDA Backend\n");
+//        af::setBackend(AF_BACKEND_CUDA);
+//        std::cerr << "AF_BACKEND_CUDA: " << AF_BACKEND_CUDA << std::endl;
+//        // testBackend();
+//      } catch (af::exception& e) {
+//        fprintf(stderr,"Caught exception when trying CUDA backend\n");
+//        fprintf(stderr, "%s\n", e.what());
+//      }
+//    } else if (device == "GPU_OpenCL") {
+//      try {
+//        fprintf(stderr,"Trying OPENCL Backend\n");
+//        setBackend(AF_BACKEND_OPENCL);
+//        std::cerr << "AF_BACKEND_OPENCL: " << AF_BACKEND_OPENCL << std::endl;
+//        // testBackend();
+//      } catch (exception& e) {
+//        fprintf(stderr,"Caught exception when trying OpenCL backend\n");
+//        fprintf(stderr, "%s\n", e.what());
+//      }
+//    } else if (device == "CPU") {
+//      try {
+//        fprintf(stderr,"Trying CPU Backend\n");
+//        setBackend(AF_BACKEND_CPU);
+//        std::cerr << "AF_BACKEND_CPU: " << AF_BACKEND_CPU << std::endl;
+//        // testBackend();
+//      } catch (exception& e) {
+//        fprintf(stderr,"Caught exception when trying CPU backend\n");
+//        fprintf(stderr, "%s\n", e.what());
+//      }
+//    } else {
+//      std::cerr << "DEVICE:" << device << " not found!!" << std::endl;
+//      return true;
+//    }
+//    return false;
+//  }
+
 
 //' @export
  // [[Rcpp::export]]
-int smr_demo_run (int perc, std::string lib_path, std::string device = "GPU", bool verbose = true, bool benchmark = false) {
+void smr_demo_run (int perc, std::string lib_path, std::string device = "GPU", bool verbose = true, bool benchmark = false) {
   bool device_fail = set_device(device);
   if (device_fail) {
-    return 0;
+    std::cerr << "DEVICE FAILURE!" << std::endl;
+    return;
   }
   array train_images, train_targets;
   array test_images, test_targets;
@@ -194,9 +200,18 @@ int smr_demo_run (int perc, std::string lib_path, std::string device = "GPU", bo
   train_feats = join(1, constant(1, num_train, 1), train_feats);
   test_feats  = join(1, constant(1, num_test, 1), test_feats);
   
+  std::cerr << "Memory Usage of training data = " << std::setprecision(2) << train_feats.bytes()/1000/1000 << " MB" << std::endl;
+
+  
   // convert to sparse
   train_feats = sparse(train_feats);
   test_feats = sparse(test_feats);
+  
+  std::cerr << "Memory Usage of sparsified training data = "
+            << std::setprecision(2) << (sparseGetValues(train_feats).bytes()
+  + sparseGetRowIdx(train_feats).bytes()
+  + sparseGetColIdx(train_feats).bytes())/1000/1000
+  << " MB" << std::endl;
   
   // Train logistic regression parameters
   auto t1 = high_resolution_clock::now();
@@ -240,7 +255,7 @@ int smr_demo_run (int perc, std::string lib_path, std::string device = "GPU", bo
   duration<double, std::milli> ms_double = t2 - t1;
 
   std::cerr << "Training took: " << ms_double.count() << " ms\n";
-  return 0;
+  return;
 }
 
 //' @export
@@ -259,17 +274,34 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
                  float max_error = 0.5,    // max error
                  bool verbose = false,
                  bool benchmark = false,
-                 int device = 0) {
-  try {
-    af::setDevice(device);
-    std::string info_string = af::infoString();
-    if(verbose) {std::cerr << info_string;}
-  } catch (af::exception &ae) { std::cerr << ae.what() << std::endl; }
-  train_feats = train_feats.T();
-  test_feats  = test_feats.T();
-  // train_targets = train_targets.T();
-  // test_targets  = test_targets.T();
-  query  = query.T();
+                 std::string device = "GPU") {
+  
+  float max_memory = 8000.0;
+  bool device_fail = set_device(device);
+  if (device_fail) {
+    std::cerr << "DEVICE FAILURE!" << std::endl;
+    return 0;
+  }
+  
+  float trainbytes = train_feats.bytes()/1000/1000;
+  float testbytes = test_feats.bytes()/1000/1000;
+  float querybytes = query.bytes()/1000/1000;
+  float totalbytes = trainbytes + testbytes + querybytes;
+  
+  if(verbose){
+    std::cerr << "Memory Usage of training data = " << std::setprecision(5) << trainbytes << " MB" << std::endl;
+    std::cerr << "Memory Usage of test data = " << std::setprecision(5) << testbytes << " MB" << std::endl;
+    std::cerr << "Memory Usage of query data = " << std::setprecision(5) << querybytes << " MB" << std::endl;
+    std::cerr << "Total of above = "
+              << std::setprecision(5) << totalbytes << " MB" << std::endl;
+  }
+  
+  if (totalbytes > max_memory) {
+    std::cerr << "Max memory reached" << std::endl;
+    return 0;
+  }
+  
+
 //   // Get training parameters
   if(verbose){
     std::cerr << "Train feature dims:" << std::endl;
@@ -289,10 +321,7 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
   train_feats = join(1, constant(1, train_feats.dims(0), 1), train_feats);
   test_feats  = join(1, constant(1, test_feats.dims(0), 1), test_feats);
   query  = join(1, constant(1, query.dims(0), 1), query);
-  
-  // convert to sparse
-  train_feats = sparse(train_feats);
-  test_feats = sparse(test_feats);
+
   
   // Train logistic regression parameters
   array Weights =
@@ -319,6 +348,183 @@ af::array smr(RcppArrayFire::typed_array<f32> train_feats,
   }
   return query_outputs;
 }
+
+
+//' @export
+   // [[Rcpp::export]]
+af::array smr_sparse(RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& train_feats,
+                     RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& test_feats,
+              const RcppArrayFire::typed_array<s32>& train_targets,
+              const RcppArrayFire::typed_array<s32>& test_targets,
+              int num_classes,
+              const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& query,
+              float lambda = 1.0,
+              float learning_rate = 2.0,    // learning rate / alpha
+              int iterations = 1000,    //iterations
+              int batch_size = 100,    // batch size
+              float max_error = 0.5,    // max error
+              bool verbose = false,
+              bool benchmark = false,
+              std::string device = "GPU") {
+  
+  float max_memory = 8000.0;
+  
+  bool device_fail = set_device(device);
+  if (device_fail) {
+    std::cerr << "DEVICE FAILURE!" << std::endl;
+    return 0;
+  }
+
+
+  if(verbose){
+    std::cerr << "Train feature dims:" << std::endl;
+    std::cerr << train_feats.dims() << std::endl;
+    std::cerr << "Test feature dims:" << std::endl;
+    std::cerr << test_feats.dims() << std::endl;
+    std::cerr << "Train targets dims:" << std::endl;
+    std::cerr << train_targets.dims() << std::endl;
+    std::cerr << "Test targets dims:" << std::endl;
+    std::cerr << test_targets.dims() << std::endl;
+    std::cerr << "Num classes:" << std::endl;
+    std::cerr << num_classes << std::endl;
+    std::cerr << "Query dims:" << std::endl;
+    std::cerr << query.dims()<< std::endl;
+  }
+
+  
+  float trainbytes = (sparseGetValues(train_feats).bytes()
+                        + sparseGetRowIdx(train_feats).bytes()
+                        + sparseGetColIdx(train_feats).bytes())/1000/1000;
+                        
+  float testbytes = (sparseGetValues(test_feats).bytes()
+                       + sparseGetRowIdx(test_feats).bytes()
+                       + sparseGetColIdx(test_feats).bytes())/1000/1000;
+                       
+   float querybytes = (sparseGetValues(query).bytes()
+                         + sparseGetRowIdx(query).bytes()
+                         + sparseGetColIdx(query).bytes())/1000/1000;
+                         
+    float totalbytes = trainbytes + testbytes + querybytes;
+ 
+ if(verbose){
+ std::cerr << "Memory Usage of sparsified training data = "
+           << std::setprecision(2) << trainbytes << " MB" << std::endl;
+ std::cerr << "Memory Usage of sparsified test data = "
+           << std::setprecision(2) << testbytes << " MB" << std::endl;
+ std::cerr << "Memory Usage of sparsified query data = "
+           << std::setprecision(2) << querybytes<< " MB" << std::endl;
+std::cerr << "Total of above = "
+          << std::setprecision(5) << totalbytes << " MB" << std::endl;
+ }
+ 
+ 
+if (totalbytes > max_memory) {
+  std::cerr << "Max memory reached" << std::endl;
+  return 0;
+}
+  
+  // Train logistic regression parameters
+  array Weights =
+    train(train_feats, train_targets,
+          learning_rate,    // learning rate (aka alpha)
+          lambda,    // regularization constant (aka weight decay, aka lamdba)
+          max_error,   // maximum error
+          iterations,   // maximum iterations
+          verbose);  // verbose
+  // Predict the results
+  array train_outputs = predict(train_feats, Weights);
+  array query_outputs = predict(query, Weights);
+  array test_outputs  = predict(test_feats, Weights);
+  if(verbose){
+    fprintf(stderr, "Accuracy on training data: %2.2f\n",
+            accuracy(train_outputs, train_targets));
+    fprintf(stderr, "Accuracy on testing data: %2.2f\n",
+            accuracy(test_outputs, test_targets));
+    fprintf(stderr, "Maximum error on testing data: %2.2f\n",
+            abserr(test_outputs, test_targets));
+  }
+  if(benchmark){
+    benchmark_softmax_regression(train_feats, train_targets, test_feats);
+  }
+  return query_outputs;
+}
+
+// 
+// //' @export
+// // [[Rcpp::export]]
+// void testargs(const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& train_feats,
+//                     const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& test_feats,
+//                     const RcppArrayFire::typed_array<s32> train_targets,
+//                     const RcppArrayFire::typed_array<s32> test_targets,
+//                     int num_classes,
+//                     const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& query,
+//                     float lambda = 1.0,
+//                     float learning_rate = 2.0,    // learning rate / alpha
+//                     int iterations = 1000,    //iterations
+//                     int batch_size = 100,    // batch size
+//                     float max_error = 0.5,    // max error
+//                     bool verbose = false,
+//                     bool benchmark = false,
+//                     std::string device = "GPU") {
+//  
+//    bool device_fail = set_device(device);
+//    if (device_fail) {
+//      std::cerr << "DEVICE FAILURE!" << std::endl;
+//      return;
+//    }
+//    
+//    // train_feats = train_feats.T();
+//    // test_feats  = test_feats.T();
+//    // train_targets = train_targets.T();
+//    // test_targets  = test_targets.T();
+//    // query  = query.T();
+//    //   // Get training parameters
+//    if(verbose){
+//      std::cerr << "Train feature dims:" << std::endl;
+//      std::cerr << train_feats.dims() << std::endl;
+//      std::cerr << "Test feature dims:" << std::endl;
+//      std::cerr << test_feats.dims() << std::endl;
+//      std::cerr << "Train targets dims:" << std::endl;
+//      std::cerr << train_targets.dims() << std::endl;
+//      std::cerr << "Test targets dims:" << std::endl;
+//      std::cerr << test_targets.dims() << std::endl;
+//      std::cerr << "Num classes:" << std::endl;
+//      std::cerr << num_classes << std::endl;
+//      std::cerr << "Query dims:" << std::endl;
+//      std::cerr << query.dims()<< std::endl;
+//    }
+//    // Add a bias that is always 1
+//    // train_feats = join(1, constant(1, train_feats.dims(0), 1), train_feats);
+//    // test_feats  = join(1, constant(1, test_feats.dims(0), 1), test_feats);
+//    // query  = join(1, constant(1, query.dims(0), 1), query);
+//    
+//    // // convert to sparse
+//    // train_feats = sparse(train_feats);
+//    // test_feats = sparse(test_feats);
+//    
+//    float trainbytes = (sparseGetValues(train_feats).bytes()
+//                          + sparseGetRowIdx(train_feats).bytes()
+//                          + sparseGetColIdx(train_feats).bytes())/1000/1000;
+//                          
+//    float testbytes = (sparseGetValues(test_feats).bytes()
+//                          + sparseGetRowIdx(test_feats).bytes()
+//                          + sparseGetColIdx(test_feats).bytes())/1000/1000;
+//                          
+//    float querybytes = (sparseGetValues(query).bytes()
+//                         + sparseGetRowIdx(query).bytes()
+//                         + sparseGetColIdx(query).bytes())/1000/1000;
+//                         
+//    std::cerr << "Memory Usage of sparsified training data = "
+//              << std::setprecision(5) << trainbytes << " MB" << std::endl;
+//    std::cerr << "Memory Usage of sparsified test data = "
+//              << std::setprecision(5) << testbytes << " MB" << std::endl;
+//    std::cerr << "Memory Usage of sparsified query data = "
+//              << std::setprecision(5) << querybytes<< " MB" << std::endl;
+//    std::cerr << "Total of above = "
+//              << std::setprecision(5) << trainbytes + testbytes + querybytes<< " MB" << std::endl;
+//    return;
+// }
+// 
 
 
 

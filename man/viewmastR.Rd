@@ -26,9 +26,10 @@ viewmastR(
   iterations = 1000,
   LSImethod = 1,
   verbose = T,
-  device = 0,
+  device = c("GPU", "GPU_OPENCL", "GPU_CUDA", "CPU"),
   threshold = NULL,
   keras_model = NULL,
+  use_sparse = F,
   ...
 )
 }

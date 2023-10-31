@@ -11,56 +11,82 @@ Rcpp::Rostream<true>&  Rcpp::Rcout = Rcpp::Rcpp_cout_get();
 Rcpp::Rostream<false>& Rcpp::Rcerr = Rcpp::Rcpp_cerr_get();
 #endif
 
-// smr_demo_run
-int smr_demo_run(int perc, std::string lib_path, std::string device, bool verbose, bool benchmark);
-RcppExport SEXP _viewmastR2_smr_demo_run(SEXP percSEXP, SEXP lib_pathSEXP, SEXP deviceSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
+// set_device
+bool set_device(std::string device);
+RcppExport SEXP _viewmastR2_set_device(SEXP deviceSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
-    Rcpp::traits::input_parameter< std::string >::type lib_path(lib_pathSEXP);
     Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
-    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
-    Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
-    rcpp_result_gen = Rcpp::wrap(smr_demo_run(perc, lib_path, device, verbose, benchmark));
+    rcpp_result_gen = Rcpp::wrap(set_device(device));
     return rcpp_result_gen;
 END_RCPP
 }
-// smr
-af::array smr(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_targets, RcppArrayFire::typed_array<s32> test_targets, int num_classes, RcppArrayFire::typed_array<f32> query, float lambda, float learning_rate, int iterations, int batch_size, float max_error, bool verbose, bool benchmark, int device);
-RcppExport SEXP _viewmastR2_smr(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP lambdaSEXP, SEXP learning_rateSEXP, SEXP iterationsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP, SEXP deviceSEXP) {
+// af_nn
+af::array af_nn(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_target, RcppArrayFire::typed_array<s32> test_target, int num_classes, std::vector<int> layers, RcppArrayFire::typed_array<f32> query_feats, bool relu_activation, std::string device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose, bool benchmark);
+RcppExport SEXP _viewmastR2_af_nn(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP layersSEXP, SEXP query_featsSEXP, SEXP relu_activationSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type train_feats(train_featsSEXP);
     Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type test_feats(test_featsSEXP);
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_targets(train_targetsSEXP);
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_targets(test_targetsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_target(train_targetSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_target(test_targetSEXP);
     Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
-    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query(querySEXP);
-    Rcpp::traits::input_parameter< float >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type layers(layersSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query_feats(query_featsSEXP);
+    Rcpp::traits::input_parameter< bool >::type relu_activation(relu_activationSEXP);
+    Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
     Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
-    Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< int >::type max_epochs(max_epochsSEXP);
     Rcpp::traits::input_parameter< int >::type batch_size(batch_sizeSEXP);
     Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
     Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
     Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
-    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
-    rcpp_result_gen = Rcpp::wrap(smr(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device));
+    rcpp_result_gen = Rcpp::wrap(af_nn(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark));
     return rcpp_result_gen;
 END_RCPP
 }
-// computeSparseRowVariances
-Rcpp::NumericVector computeSparseRowVariances(IntegerVector j, NumericVector val, NumericVector rm, int n);
-RcppExport SEXP _viewmastR2_computeSparseRowVariances(SEXP jSEXP, SEXP valSEXP, SEXP rmSEXP, SEXP nSEXP) {
+// af_nn_sparse
+af::array af_nn_sparse(RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& train_feats, RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& test_feats, RcppArrayFire::typed_array<s32>& train_target, RcppArrayFire::typed_array<s32>& test_target, int num_classes, std::vector<int> layers, const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& query_feats, bool relu_activation, std::string device, std::string dts, float learning_rate, int max_epochs, int batch_size, float max_error, bool verbose, bool benchmark);
+RcppExport SEXP _viewmastR2_af_nn_sparse(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetSEXP, SEXP test_targetSEXP, SEXP num_classesSEXP, SEXP layersSEXP, SEXP query_featsSEXP, SEXP relu_activationSEXP, SEXP deviceSEXP, SEXP dtsSEXP, SEXP learning_rateSEXP, SEXP max_epochsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< IntegerVector >::type j(jSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type val(valSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type rm(rmSEXP);
-    Rcpp::traits::input_parameter< int >::type n(nSEXP);
-    rcpp_result_gen = Rcpp::wrap(computeSparseRowVariances(j, val, rm, n));
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32>& >::type train_target(train_targetSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32>& >::type test_target(test_targetSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< std::vector<int> >::type layers(layersSEXP);
+    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& >::type query_feats(query_featsSEXP);
+    Rcpp::traits::input_parameter< bool >::type relu_activation(relu_activationSEXP);
+    Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
+    Rcpp::traits::input_parameter< int >::type max_epochs(max_epochsSEXP);
+    Rcpp::traits::input_parameter< int >::type batch_size(batch_sizeSEXP);
+    Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
+    rcpp_result_gen = Rcpp::wrap(af_nn_sparse(train_feats, test_feats, train_target, test_target, num_classes, layers, query_feats, relu_activation, device, dts, learning_rate, max_epochs, batch_size, max_error, verbose, benchmark));
+    return rcpp_result_gen;
+END_RCPP
+}
+// ann_demo
+int ann_demo(std::string lib_path, int device, int perc, std::string dts, bool verbose, bool benchmark);
+RcppExport SEXP _viewmastR2_ann_demo(SEXP lib_pathSEXP, SEXP deviceSEXP, SEXP percSEXP, SEXP dtsSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::string >::type lib_path(lib_pathSEXP);
+    Rcpp::traits::input_parameter< int >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    Rcpp::traits::input_parameter< std::string >::type dts(dtsSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
+    rcpp_result_gen = Rcpp::wrap(ann_demo(lib_path, device, perc, dts, verbose, benchmark));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -109,15 +135,96 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// smr_demo_run
+void smr_demo_run(int perc, std::string lib_path, std::string device, bool verbose, bool benchmark);
+RcppExport SEXP _viewmastR2_smr_demo_run(SEXP percSEXP, SEXP lib_pathSEXP, SEXP deviceSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP) {
+BEGIN_RCPP
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type perc(percSEXP);
+    Rcpp::traits::input_parameter< std::string >::type lib_path(lib_pathSEXP);
+    Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
+    smr_demo_run(perc, lib_path, device, verbose, benchmark);
+    return R_NilValue;
+END_RCPP
+}
+// smr
+af::array smr(RcppArrayFire::typed_array<f32> train_feats, RcppArrayFire::typed_array<f32> test_feats, RcppArrayFire::typed_array<s32> train_targets, RcppArrayFire::typed_array<s32> test_targets, int num_classes, RcppArrayFire::typed_array<f32> query, float lambda, float learning_rate, int iterations, int batch_size, float max_error, bool verbose, bool benchmark, std::string device);
+RcppExport SEXP _viewmastR2_smr(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP lambdaSEXP, SEXP learning_rateSEXP, SEXP iterationsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP, SEXP deviceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type train_targets(train_targetsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<s32> >::type test_targets(test_targetsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32> >::type query(querySEXP);
+    Rcpp::traits::input_parameter< float >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
+    Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< int >::type batch_size(batch_sizeSEXP);
+    Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
+    Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
+    rcpp_result_gen = Rcpp::wrap(smr(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device));
+    return rcpp_result_gen;
+END_RCPP
+}
+// smr_sparse
+af::array smr_sparse(RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& train_feats, RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& test_feats, const RcppArrayFire::typed_array<s32>& train_targets, const RcppArrayFire::typed_array<s32>& test_targets, int num_classes, const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& query, float lambda, float learning_rate, int iterations, int batch_size, float max_error, bool verbose, bool benchmark, std::string device);
+RcppExport SEXP _viewmastR2_smr_sparse(SEXP train_featsSEXP, SEXP test_featsSEXP, SEXP train_targetsSEXP, SEXP test_targetsSEXP, SEXP num_classesSEXP, SEXP querySEXP, SEXP lambdaSEXP, SEXP learning_rateSEXP, SEXP iterationsSEXP, SEXP batch_sizeSEXP, SEXP max_errorSEXP, SEXP verboseSEXP, SEXP benchmarkSEXP, SEXP deviceSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& >::type train_feats(train_featsSEXP);
+    Rcpp::traits::input_parameter< RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& >::type test_feats(test_featsSEXP);
+    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<s32>& >::type train_targets(train_targetsSEXP);
+    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<s32>& >::type test_targets(test_targetsSEXP);
+    Rcpp::traits::input_parameter< int >::type num_classes(num_classesSEXP);
+    Rcpp::traits::input_parameter< const RcppArrayFire::typed_array<f32, AF_STORAGE_CSR>& >::type query(querySEXP);
+    Rcpp::traits::input_parameter< float >::type lambda(lambdaSEXP);
+    Rcpp::traits::input_parameter< float >::type learning_rate(learning_rateSEXP);
+    Rcpp::traits::input_parameter< int >::type iterations(iterationsSEXP);
+    Rcpp::traits::input_parameter< int >::type batch_size(batch_sizeSEXP);
+    Rcpp::traits::input_parameter< float >::type max_error(max_errorSEXP);
+    Rcpp::traits::input_parameter< bool >::type verbose(verboseSEXP);
+    Rcpp::traits::input_parameter< bool >::type benchmark(benchmarkSEXP);
+    Rcpp::traits::input_parameter< std::string >::type device(deviceSEXP);
+    rcpp_result_gen = Rcpp::wrap(smr_sparse(train_feats, test_feats, train_targets, test_targets, num_classes, query, lambda, learning_rate, iterations, batch_size, max_error, verbose, benchmark, device));
+    return rcpp_result_gen;
+END_RCPP
+}
+// computeSparseRowVariances
+Rcpp::NumericVector computeSparseRowVariances(IntegerVector j, NumericVector val, NumericVector rm, int n);
+RcppExport SEXP _viewmastR2_computeSparseRowVariances(SEXP jSEXP, SEXP valSEXP, SEXP rmSEXP, SEXP nSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< IntegerVector >::type j(jSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type val(valSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type rm(rmSEXP);
+    Rcpp::traits::input_parameter< int >::type n(nSEXP);
+    rcpp_result_gen = Rcpp::wrap(computeSparseRowVariances(j, val, rm, n));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
-    {"_viewmastR2_smr_demo_run", (DL_FUNC) &_viewmastR2_smr_demo_run, 5},
-    {"_viewmastR2_smr", (DL_FUNC) &_viewmastR2_smr, 14},
-    {"_viewmastR2_computeSparseRowVariances", (DL_FUNC) &_viewmastR2_computeSparseRowVariances, 4},
+    {"_viewmastR2_set_device", (DL_FUNC) &_viewmastR2_set_device, 1},
+    {"_viewmastR2_af_nn", (DL_FUNC) &_viewmastR2_af_nn, 16},
+    {"_viewmastR2_af_nn_sparse", (DL_FUNC) &_viewmastR2_af_nn_sparse, 16},
+    {"_viewmastR2_ann_demo", (DL_FUNC) &_viewmastR2_ann_demo, 6},
     {"_viewmastR2_get_sigmoid", (DL_FUNC) &_viewmastR2_get_sigmoid, 1},
     {"_viewmastR2_get_relu", (DL_FUNC) &_viewmastR2_get_relu, 1},
     {"_viewmastR2_get_mnist", (DL_FUNC) &_viewmastR2_get_mnist, 3},
     {"_viewmastR2_test_backends", (DL_FUNC) &_viewmastR2_test_backends, 0},
+    {"_viewmastR2_smr_demo_run", (DL_FUNC) &_viewmastR2_smr_demo_run, 5},
+    {"_viewmastR2_smr", (DL_FUNC) &_viewmastR2_smr, 14},
+    {"_viewmastR2_smr_sparse", (DL_FUNC) &_viewmastR2_smr_sparse, 14},
+    {"_viewmastR2_computeSparseRowVariances", (DL_FUNC) &_viewmastR2_computeSparseRowVariances, 4},
     {NULL, NULL, 0}
 };
 
