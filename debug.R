@@ -75,11 +75,9 @@ vm_demo(FUNC="softmax_regression", device = "GPU")
 system("gcc --version")
 
 
-<<<<<<< HEAD
-
 DimPlot(seu, group.by = "smr_celltype", cols=sfc(21))
 
 vm_demo(FUNC="keras", device = 0)
-=======
+
 viewmastR2::vm_demo(FUNC="keras", device = 0)
->>>>>>> c740e95 (bug)
+
