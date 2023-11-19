@@ -60,7 +60,7 @@ static void setup_mnist(int *num_classes, int *num_train, int *num_test,
     //   return;
     // }
     // char *rpath = realpath(fpath, NULL);
-    std::string root = "/viewmastR/extdata/mnist";
+    std::string root = "/viewmastR2/extdata/mnist";
     std::string path1 = lib_folder;
     std::string ifile = "/images-subset";
     // std::strcat(fpath, mpath.c_str());
