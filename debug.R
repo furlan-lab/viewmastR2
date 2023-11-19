@@ -2,6 +2,14 @@
 rm(list=ls())
 roxygen2::roxygenize(".")
 
+
+setwd("/")
+install.packages("devtools")
+devtools::install_github("furlan-lab/RcppArrayFire")
+devtools::install_github("furlan-lab/viewmastR2")
+devtools::install_github("cole-trapnell-lab/monocle3")
+
+
 library(viewmastR2)
 test_backends()
 
@@ -64,9 +72,14 @@ library(tidyr)
 library(keras)
 vm_demo(FUNC="softmax_regression", device = "GPU")
 
+system("gcc --version")
 
 
+<<<<<<< HEAD
 
 DimPlot(seu, group.by = "smr_celltype", cols=sfc(21))
 
 vm_demo(FUNC="keras", device = 0)
+=======
+viewmastR2::vm_demo(FUNC="keras", device = 0)
+>>>>>>> c740e95 (bug)
